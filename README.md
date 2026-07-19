@@ -26,3 +26,4 @@ python watchdog.py -i 192.168.1.1 -a admin-password
 - [x] Better error handling
 - [ ] Configurable check interval
 - [ ] More detailed console output
+- [ ]Create an executable file for non-technical users
