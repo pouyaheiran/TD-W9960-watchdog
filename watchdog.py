@@ -35,11 +35,8 @@ def connect():
             raise RuntimeError("Failed to parse modem connection information.")
 
         random_service = f"tci{random.randint(1000, 9999)}"
-        cmd = f"wan set service {service_name}\
-        --protocol pppoe --username {username}\
-        --password {password}\
-        --servicename {random_service}\
-        --nat enable --defaultroute yes --mtu 1480\n"
+        cmd = f"wan set service {service_name} --protocol pppoe --username {username} --password {password} --servicename {random_service} --nat enable --defaultroute yes --mtu 1480\n"
+
 
         tn.write(cmd.encode())
         sleep(2)
@@ -66,10 +63,13 @@ while True:
             print("\r\x1b[K🔄 Reconnecting...", end="", flush=True)
             if connect():
                 print("\r\x1b[K✅ Reconnected successfully!", end="", flush=True)
+                sleep(15)
+
             else:
                 print("\r\x1b[K❌ Failed to reconnect.", end="", flush=True)
+                sleep(3)
 
             fail_count = 0
-            sleep(10)
 
-    sleep(2)
+
+    sleep(1)
