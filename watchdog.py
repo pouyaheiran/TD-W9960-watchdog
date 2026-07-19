@@ -5,6 +5,7 @@ import random
 import telnetlib
 
 args = parse_args()
+
 def extract_value(text, key):
     if isinstance(text, bytes):
         text = text.decode('utf-8', errors='ignore')
@@ -15,45 +16,60 @@ def extract_value(text, key):
     return None
 
 def connect():
+    tn = None
+    try:
+        tn = telnetlib.Telnet(args.ip_address,timeout=3)
+        tn.read_until(b"password:",timeout=5)
 
-    tn = telnetlib.Telnet(args.ip_address,timeout=3)
-    tn.read_until(b"password:",timeout=5)
+        tn.write(args.admin_pass.encode("ascii") + b"\n")
+        sleep(2)
+        tn.write(b"wan show connection info\n")
+        sleep(2)
 
-    tn.write(args.admin_pass.encode("ascii") + b"\n")
-    sleep(2)
-    tn.write(b"wan show connection info\n")
-    sleep(2)
-    output = tn.read_very_eager()
-    username = extract_value(output, "username=")
-    password = extract_value(output, "password=")
-    service_name = extract_value(output, "name=")
+        output = tn.read_very_eager()
+        username = extract_value(output, "username=")
+        password = extract_value(output, "password=")
+        service_name = extract_value(output, "name=")
 
-    random_service = f"tci{random.randint(1000, 9999)}"
-    cmd = f"wan set service {service_name}\
-    --protocol pppoe --username {username}\
-    --password {password}\
-    --servicename {random_service}\
-    --nat enable --defaultroute yes --mtu 1480\n"
+        if None in (username, password, service_name):
+            raise RuntimeError("Failed to parse modem connection information.")
 
-    tn.write(cmd.encode())
-    sleep(2)
-    tn.close()
+        random_service = f"tci{random.randint(1000, 9999)}"
+        cmd = f"wan set service {service_name}\
+        --protocol pppoe --username {username}\
+        --password {password}\
+        --servicename {random_service}\
+        --nat enable --defaultroute yes --mtu 1480\n"
+
+        tn.write(cmd.encode())
+        sleep(2)
+        return True
+
+    except Exception as e:
+        print(e)
+        return False
+
+    finally:
+        if tn:
+            tn.close()
 
 fail_count = 0
 while True:
     if ping.check_internet():
         fail_count = 0
-        print("🟢")
+        print("\r\x1b[KStatus: 🟢", end="", flush=True)
     else:
         fail_count += 1
-        print(f"fail:({fail_count}/6)")
+        print(f"\r\x1b[KStatus: fail:({fail_count}/6)", end="", flush=True)
 
         if fail_count >= 6:
-            print("🔄")
-            try:
-                connect()
-            except Exception as e:
-                print(e)
+            print("\r\x1b[K🔄 Reconnecting...", end="", flush=True)
+            if connect():
+                print("\r\x1b[K✅ Reconnected successfully!", end="", flush=True)
+            else:
+                print("\r\x1b[K❌ Failed to reconnect.", end="", flush=True)
+
             fail_count = 0
+            sleep(10)
 
     sleep(2)
