@@ -19,3 +19,10 @@ Or specify a custom modem IP address and admin password:
 ```bash
 python watchdog.py -i 192.168.1.1 -a admin-password
 ```
+
+
+## TODO
+
+- [ ] Better error handling
+- [ ] Configurable check interval
+- [ ] More detailed console output
