@@ -23,6 +23,6 @@ python watchdog.py -i 192.168.1.1 -a admin-password
 
 ## TODO
 
-- [ ] Better error handling
+- [x] Better error handling
 - [ ] Configurable check interval
 - [ ] More detailed console output
